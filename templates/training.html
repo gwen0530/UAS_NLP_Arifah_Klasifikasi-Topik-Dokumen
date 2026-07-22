@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Training Model - Document Topic Classification System{% endblock %}
+{% block breadcrumb %}Training Model{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+  <div class="col-12 col-lg-8">
+    <div class="card-custom">
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+          <h5 class="fw-bold mb-1"><i class="bi bi-cpu-fill me-2 text-warning"></i>Pelatihan Model Logistic Regression</h5>
+          <p class="text-muted small mb-0">Transformasi teks dengan TF-IDF Vectorizer dan Logistic Regression (Split 80% Train, 20% Test).</p>
+        </div>
+        <button id="btn-start-training" class="btn btn-primary-custom">
+          <i class="bi bi-play-circle-fill me-1"></i> Mulai Training Model
+        </button>
+      </div>
+
+      <div id="training-progress-container" class="mb-4 d-none">
+        <h6 class="fw-bold mb-2">Progres Pelatihan:</h6>
+        <div class="progress mb-3" style="height: 12px; border-radius: 10px;">
+          <div id="training-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style="width: 0%;"></div>
+        </div>
+        <ul class="list-group list-group-flush rounded-xl border">
+          <li id="step-load" class="list-group-item d-flex align-items-center gap-2"><i class="bi bi-circle text-muted"></i> Dataset Loaded</li>
+          <li id="step-clean" class="list-group-item d-flex align-items-center gap-2"><i class="bi bi-circle text-muted"></i> Text Cleaning (Lowercase, Punctuation, Symbol, HTML)</li>
+          <li id="step-tokenize" class="list-group-item d-flex align-items-center gap-2"><i class="bi bi-circle text-muted"></i> Tokenizing & Stopword Removal</li>
+          <li id="step-vectorize" class="list-group-item d-flex align-items-center gap-2"><i class="bi bi-circle text-muted"></i> Stemming (Sastrawi) & TF-IDF Vectorization</li>
+          <li id="step-train" class="list-group-item d-flex align-items-center gap-2"><i class="bi bi-circle text-muted"></i> Training Logistic Regression (80% / 20%)</li>
+          <li id="step-save" class="list-group-item d-flex align-items-center gap-2"><i class="bi bi-circle text-muted"></i> Saving Model via Joblib (model.pkl, tfidf.pkl)</li>
+        </ul>
+      </div>
+
+      <div id="training-result-box" class="p-3 border rounded-xl bg-light d-none">
+        <h6 class="fw-bold text-success mb-2"><i class="bi bi-check-circle-fill me-2"></i>Pelatihan Model Selesai!</h6>
+        <div class="row g-2 text-center mt-2">
+          <div class="col-3">
+            <small class="text-muted d-block">Akurasi</small>
+            <span id="res-acc" class="fw-bold text-dark fs-5">0%</span>
+          </div>
+          <div class="col-3">
+            <small class="text-muted d-block">Precision</small>
+            <span id="res-prec" class="fw-bold text-dark fs-5">0%</span>
+          </div>
+          <div class="col-3">
+            <small class="text-muted d-block">Recall</small>
+            <span id="res-rec" class="fw-bold text-dark fs-5">0%</span>
+          </div>
+          <div class="col-3">
+            <small class="text-muted d-block">F1-Score</small>
+            <span id="res-f1" class="fw-bold text-dark fs-5">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card-custom">
+      <h6 class="fw-bold mb-3"><i class="bi bi-gear-wide-connected text-warning me-2"></i>Tahapan NLP Pipeline</h6>
+      <div class="d-flex flex-column gap-3">
+        <div class="p-2 border rounded-lg bg-light">
+          <div class="fw-bold text-dark small">1. Text Cleaning</div>
+          <small class="text-muted">Lowercase, hapus simbol, angka, tanda baca, kode HTML & spasi ganda.</small>
+        </div>
+        <div class="p-2 border rounded-lg bg-light">
+          <div class="fw-bold text-dark small">2. Tokenizing</div>
+          <small class="text-muted">Memecah dokumen menjadi urutan token kata.</small>
+        </div>
+        <div class="p-2 border rounded-lg bg-light">
+          <div class="fw-bold text-dark small">3. Stopword Removal</div>
+          <small class="text-muted">Membuang kata hubung / kata umum yang kurang informatif.</small>
+        </div>
+        <div class="p-2 border rounded-lg bg-light">
+          <div class="fw-bold text-dark small">4. Stemming Sastrawi</div>
+          <small class="text-muted">Mengubah kata berimbuhan menjadi kata dasar Bahasa Indonesia.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-custom">
+  <h6 class="fw-bold mb-3"><i class="bi bi-eye-fill me-2 text-warning"></i>Pratinjau Hasil Preprocessing (Before vs After)</h6>
+  <div class="table-responsive">
+    <table class="table table-custom mb-0">
+      <thead>
+        <tr>
+          <th>Kategori</th>
+          <th style="width: 40%;">Original (Before)</th>
+          <th style="width: 45%;">Preprocessed (After Stemming)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if samples %}
+          {% for item in samples %}
+          <tr>
+            <td><span class="badge badge-topic">{{ item.label }}</span></td>
+            <td><small class="text-muted">{{ item.original }}</small></td>
+            <td><small class="fw-bold text-dark">{{ item.stemmed }}</small></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="3" class="text-center py-3 text-muted">Belum ada sampel dataset. Silakan upload dataset terlebih dahulu.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const btnStart = document.getElementById('btn-start-training');
+    const container = document.getElementById('training-progress-container');
+    const progressBar = document.getElementById('training-progress-bar');
+    const resultBox = document.getElementById('training-result-box');
+
+    btnStart.addEventListener('click', function() {
+      container.classList.remove('d-none');
+      resultBox.classList.add('d-none');
+      btnStart.disabled = true;
+
+      setStepStatus('step-load', 'active', 'Dataset Loaded');
+      progressBar.style.width = '20%';
+
+      setTimeout(() => {
+        setStepStatus('step-clean', 'active', 'Cleaning');
+        progressBar.style.width = '40%';
+      }, 600);
+
+      setTimeout(() => {
+        setStepStatus('step-tokenize', 'active', 'Tokenizing');
+        progressBar.style.width = '60%';
+      }, 1200);
+
+      setTimeout(() => {
+        setStepStatus('step-vectorize', 'active', 'Vectorizing');
+        progressBar.style.width = '80%';
+      }, 1800);
+
+      setTimeout(() => {
+        setStepStatus('step-train', 'active', 'Training');
+        progressBar.style.width = '90%';
+
+        fetch('/api/training/run', { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              setStepStatus('step-save', 'done', 'Saving Model Completed');
+              progressBar.style.width = '100%';
+              progressBar.classList.remove('progress-bar-animated');
+
+              document.getElementById('res-acc').innerText = (data.accuracy * 100).toFixed(2) + '%';
+              document.getElementById('res-prec').innerText = (data.precision * 100).toFixed(2) + '%';
+              document.getElementById('res-rec').innerText = (data.recall * 100).toFixed(2) + '%';
+              document.getElementById('res-f1').innerText = (data.f1_score * 100).toFixed(2) + '%';
+
+              resultBox.classList.remove('d-none');
+              showToast('Model berhasil dilatih!', 'success');
+            } else {
+              showToast(data.message || 'Gagal melatih model', 'error');
+            }
+            btnStart.disabled = false;
+          })
+          .catch(() => {
+            showToast('Terjadi kesalahan sistem', 'error');
+            btnStart.disabled = false;
+          });
+      }, 2400);
+    });
+  });
+
+  function setStepStatus(stepId, state, text) {
+    const el = document.getElementById(stepId);
+    if (!el) return;
+    if (state === 'active') {
+      el.className = 'list-group-item d-flex align-items-center gap-2 list-group-item-warning fw-bold';
+      el.querySelector('i').className = 'bi bi-arrow-right-circle-fill text-warning';
+    } else if (state === 'done') {
+      el.className = 'list-group-item d-flex align-items-center gap-2 list-group-item-success fw-bold';
+      el.querySelector('i').className = 'bi bi-check-circle-fill text-success';
+    }
+  }
+</script>
+{% endblock %}

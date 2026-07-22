@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Dokumentasi - Document Topic Classification System{% endblock %}
+{% block breadcrumb %}Dokumentasi{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-8">
+
+    <div class="card-custom mb-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-info-circle-fill me-2 text-warning"></i>Tentang Aplikasi</h5>
+      <p class="text-muted">
+        <b>Document Topic Classification System</b> adalah aplikasi web berbasis Machine Learning yang dirancang khusus untuk mengklasifikasikan topik dokumen teks Bahasa Indonesia secara otomatis. Sistem ini memanfaatkan algoritma Logistic Regression yang dipadukan dengan teknik TF-IDF Vectorization serta pipeline preprocessing NLP lengkap menggunakan library Sastrawi untuk memproses teks Bahasa Indonesia dengan akurasi tinggi.
+      </p>
+      <p class="text-muted mb-0">
+        Aplikasi ini dibangun sebagai proyek akhir semester Mata Kuliah <b>Natural Language Processing (NLP)</b>, dengan antarmuka profesional berbasis Flask, Bootstrap 5, dan Chart.js.
+      </p>
+    </div>
+
+    <div class="card-custom mb-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-diagram-2-fill me-2 text-warning"></i>Alur Sistem NLP Pipeline</h5>
+      <div class="d-flex flex-column gap-3">
+        <div class="d-flex align-items-start gap-3 p-3 border rounded-xl bg-light">
+          <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 1rem;">1</div>
+          <div>
+            <div class="fw-bold">Input Dokumen Teks Bahasa Indonesia</div>
+            <small class="text-muted">User memasukkan teks dokumen atau sistem membaca dari dataset CSV.</small>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3 p-3 border rounded-xl bg-light">
+          <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 1rem;">2</div>
+          <div>
+            <div class="fw-bold">Text Cleaning & Normalisasi</div>
+            <small class="text-muted">Konversi ke lowercase, hapus HTML, angka, simbol, tanda baca, dan whitespace ganda.</small>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3 p-3 border rounded-xl bg-light">
+          <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 1rem;">3</div>
+          <div>
+            <div class="fw-bold">Tokenizing</div>
+            <small class="text-muted">Pemisahan teks menjadi urutan token kata individual.</small>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3 p-3 border rounded-xl bg-light">
+          <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 1rem;">4</div>
+          <div>
+            <div class="fw-bold">Stopword Removal (Sastrawi)</div>
+            <small class="text-muted">Pembuangan kata umum / kata hubung yang tidak informatif dalam Bahasa Indonesia.</small>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3 p-3 border rounded-xl bg-light">
+          <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 1rem;">5</div>
+          <div>
+            <div class="fw-bold">Stemming Bahasa Indonesia (Sastrawi)</div>
+            <small class="text-muted">Pengubahan kata berimbuhan menjadi kata dasar menggunakan algoritma Enhanced Confix Stripping (ECS).</small>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3 p-3 border rounded-xl bg-light">
+          <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 1rem;">6</div>
+          <div>
+            <div class="fw-bold">TF-IDF Vectorization</div>
+            <small class="text-muted">Transformasi teks menjadi vektor fitur numerik dengan pembobotan TF-IDF (max_features=2500, ngram_range=(1,2)).</small>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3 p-3 border rounded-xl bg-light">
+          <div class="kpi-icon flex-shrink-0" style="width: 40px; height: 40px; font-size: 1rem;">7</div>
+          <div>
+            <div class="fw-bold">Logistic Regression Classification</div>
+            <small class="text-muted">Prediksi topik dokumen dengan skor probabilitas untuk setiap kelas topik.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-custom mb-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-book-half me-2 text-warning"></i>Kategori Topik yang Didukung</h5>
+      <div class="row g-2">
+        {% for cat in ['Teknologi', 'Pendidikan', 'Kesehatan', 'Politik', 'Ekonomi', 'Olahraga', 'Hiburan'] %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="p-2 border rounded-xl text-center bg-light">
+            <span class="fw-bold text-dark small">{{ cat }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card-custom mb-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-question-circle-fill me-2 text-warning"></i>Cara Penggunaan</h5>
+      <ol class="text-muted ps-3">
+        <li class="mb-2"><b>Upload Dataset</b>: Buka halaman Dataset dan upload file CSV dengan kolom <code>text</code> dan <code>label</code>.</li>
+        <li class="mb-2"><b>Training Model</b>: Buka halaman Training Model dan klik tombol "Mulai Training Model" untuk melatih model klasifikasi.</li>
+        <li class="mb-2"><b>Testing / Prediksi</b>: Buka halaman Testing, masukkan teks dokumen Bahasa Indonesia dan klik tombol "Prediksi Topik Dokumen".</li>
+        <li class="mb-2"><b>Evaluasi</b>: Lihat performa model (Accuracy, Precision, Recall, F1-Score, Confusion Matrix) di halaman Evaluasi.</li>
+        <li class="mb-2"><b>Visualisasi</b>: Eksplorasi grafik distribusi data, word frequency, dan riwayat prediksi di halaman Visualisasi.</li>
+        <li class="mb-2"><b>Export</b>: Download laporan evaluasi dalam format PDF atau riwayat prediksi dalam format Excel.</li>
+      </ol>
+    </div>
+
+  </div>
+
+  <div class="col-12 col-lg-4">
+
+    <div class="card-custom mb-4">
+      <h6 class="fw-bold mb-3"><i class="bi bi-gear-fill me-2 text-warning"></i>Informasi Sistem</h6>
+      <table class="table table-custom mb-0 small">
+        <tr>
+          <td class="fw-bold text-muted">Python</td>
+          <td class="fw-bold">{{ python_version }}</td>
+        </tr>
+        <tr>
+          <td class="fw-bold text-muted">Flask</td>
+          <td class="fw-bold">{{ flask_version }}</td>
+        </tr>
+        <tr>
+          <td class="fw-bold text-muted">Status Model</td>
+          <td>
+            {% if model_status == 'Tersedia' %}
+              <span class="badge badge-status badge-status-active">Tersedia</span>
+            {% else %}
+              <span class="badge badge-status badge-status-warning">Belum Dilatih</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td class="fw-bold text-muted">Model</td>
+          <td class="fw-bold">Logistic Regression</td>
+        </tr>
+        <tr>
+          <td class="fw-bold text-muted">Vectorizer</td>
+          <td class="fw-bold">TF-IDF (ngram 1-2)</td>
+        </tr>
+        <tr>
+          <td class="fw-bold text-muted">Split Data</td>
+          <td class="fw-bold">80% Train / 20% Test</td>
+        </tr>
+        <tr>
+          <td class="fw-bold text-muted">Database</td>
+          <td class="fw-bold">SQLite</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card-custom mb-4">
+      <h6 class="fw-bold mb-3"><i class="bi bi-box-seam-fill me-2 text-warning"></i>Library yang Digunakan</h6>
+      <div class="d-flex flex-column gap-2">
+        {% for lib in [
+          ('Flask', 'Backend Web Framework'),
+          ('Pandas', 'Data Manipulation'),
+          ('NumPy', 'Numerical Computing'),
+          ('Scikit-learn', 'Machine Learning (TF-IDF, LR)'),
+          ('Sastrawi', 'Indonesian NLP Stemmer'),
+          ('NLTK', 'Natural Language Toolkit'),
+          ('Joblib', 'Model Serialization (.pkl)'),
+          ('Matplotlib & Seaborn', 'Data Visualization Backend'),
+          ('Plotly', 'Interactive Charts Backend'),
+          ('Chart.js', 'Frontend Interactive Charts'),
+          ('Bootstrap 5', 'Frontend CSS Framework'),
+          ('OpenPyXL', 'Excel File Export'),
+          ('ReportLab', 'PDF Report Generation')
+        ] %}
+        <div class="d-flex align-items-center justify-content-between p-2 border rounded-lg bg-light">
+          <span class="fw-bold text-dark small">{{ lib[0] }}</span>
+          <small class="text-muted">{{ lib[1] }}</small>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card-custom">
+      <h6 class="fw-bold mb-3"><i class="bi bi-database-fill me-2 text-warning"></i>Tabel Database SQLite</h6>
+      <div class="d-flex flex-column gap-2">
+        {% for tbl in [('Dataset', 'Penyimpanan dokumen dan label'), ('PredictionHistory', 'Riwayat hasil prediksi'), ('TrainingHistory', 'Riwayat sesi pelatihan'), ('UserActivity', 'Log aktivitas pengguna')] %}
+        <div class="p-2 border rounded-lg bg-light">
+          <div class="fw-bold text-dark small">{{ tbl[0] }}</div>
+          <small class="text-muted">{{ tbl[1] }}</small>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

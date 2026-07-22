@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluasi Model - Document Topic Classification System{% endblock %}
+{% block breadcrumb %}Evaluasi Model{% endblock %}
+
+{% block content %}
+{% if eval_data %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h5 class="fw-bold mb-1"><i class="bi bi-bar-chart-line-fill me-2 text-warning"></i>Metrik Evaluasi Model NLP</h5>
+    <p class="text-muted small mb-0">Hasil pengujian performa klasifikasi Logistic Regression pada dataset terdaftar.</p>
+  </div>
+  <a href="{{ url_for('export_pdf') }}" class="btn btn-primary-custom">
+    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Export Laporan PDF
+  </a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card-custom text-center py-3 mb-0">
+      <div class="kpi-label">Accuracy</div>
+      <div class="kpi-val text-warning">{{ "%.2f"|format(eval_data.accuracy * 100) }}%</div>
+      <small class="text-muted">Akurasi Keseluruhan</small>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card-custom text-center py-3 mb-0">
+      <div class="kpi-label">Precision</div>
+      <div class="kpi-val text-warning">{{ "%.2f"|format(eval_data.precision * 100) }}%</div>
+      <small class="text-muted">Weighted Precision</small>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card-custom text-center py-3 mb-0">
+      <div class="kpi-label">Recall</div>
+      <div class="kpi-val text-warning">{{ "%.2f"|format(eval_data.recall * 100) }}%</div>
+      <small class="text-muted">Weighted Recall</small>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card-custom text-center py-3 mb-0">
+      <div class="kpi-label">F1-Score</div>
+      <div class="kpi-val text-warning">{{ "%.2f"|format(eval_data.f1_score * 100) }}%</div>
+      <small class="text-muted">Weighted F1-Score</small>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-lg-7">
+    <div class="card-custom h-100">
+      <h6 class="fw-bold mb-3"><i class="bi bi-journal-text me-2 text-warning"></i>Classification Report Per Kategori</h6>
+      <div class="table-responsive">
+        <table class="table table-custom mb-0">
+          <thead>
+            <tr>
+              <th>Kelas / Kategori</th>
+              <th class="text-center">Precision</th>
+              <th class="text-center">Recall</th>
+              <th class="text-center">F1-Score</th>
+              <th class="text-center">Support</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key, val in eval_data.classification_report.items() %}
+              {% if key not in ['accuracy', 'macro avg', 'weighted avg'] %}
+              <tr>
+                <td><span class="badge badge-topic">{{ key }}</span></td>
+                <td class="text-center fw-bold text-dark">{{ "%.4f"|format(val.precision) }}</td>
+                <td class="text-center fw-bold text-dark">{{ "%.4f"|format(val.recall) }}</td>
+                <td class="text-center fw-bold text-warning">{{ "%.4f"|format(val['f1-score']) }}</td>
+                <td class="text-center text-muted">{{ val.support }}</td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card-custom h-100">
+      <h6 class="fw-bold mb-3"><i class="bi bi-grid-3x3-gap-fill me-2 text-warning"></i>Confusion Matrix</h6>
+      <div class="table-responsive">
+        <table class="table table-bordered text-center align-middle small mb-0" style="border-color: var(--color-border);">
+          <thead class="bg-light">
+            <tr>
+              <th>Aktual \ Prediksi</th>
+              {% for label in eval_data.labels %}
+              <th style="font-size: 0.75rem;">{{ label[:4] }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in range(eval_data.labels|length) %}
+            <tr>
+              <th class="bg-light" style="font-size: 0.75rem;">{{ eval_data.labels[i][:4] }}</th>
+              {% for j in range(eval_data.labels|length) %}
+              <td class="{% if i == j %}bg-warning text-white fw-bold{% else %}bg-white text-muted{% endif %}">
+                {{ eval_data.confusion_matrix[i][j] }}
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card-custom text-center py-5">
+  <i class="bi bi-exclamation-circle text-warning mb-3" style="font-size: 3.5rem;"></i>
+  <h5 class="fw-bold text-muted">Model Belum Dilatih atau Dataset Kosong</h5>
+  <p class="text-muted" style="max-width: 400px; margin: 0 auto 1.5rem auto;">Silakan unggah dataset dan lakukan pelatihan model terlebih dahulu di halaman Training Model.</p>
+  <a href="{{ url_for('training_page') }}" class="btn btn-primary-custom">
+    <i class="bi bi-cpu-fill me-1"></i> Ke Halaman Training Model
+  </a>
+</div>
+{% endif %}
+{% endblock %}

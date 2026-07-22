@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Document Topic Classification System{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card-custom kpi-card">
+      <div>
+        <div class="kpi-label">Total Dataset</div>
+        <div class="kpi-val">{{ total_dataset }}</div>
+        <small class="text-muted">Dokumen Teks</small>
+      </div>
+      <div class="kpi-icon">
+        <i class="bi bi-file-text-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card-custom kpi-card">
+      <div>
+        <div class="kpi-label">Total Kategori</div>
+        <div class="kpi-val">{{ total_categories }}</div>
+        <small class="text-muted">Topik Kelas</small>
+      </div>
+      <div class="kpi-icon">
+        <i class="bi bi-tags-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card-custom kpi-card">
+      <div>
+        <div class="kpi-label">Akurasi Model</div>
+        <div class="kpi-val">{{ model_accuracy }}%</div>
+        <small class="text-muted">Logistic Regression</small>
+      </div>
+      <div class="kpi-icon">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card-custom kpi-card">
+      <div>
+        <div class="kpi-label">Jumlah Prediksi</div>
+        <div class="kpi-val">{{ total_predictions }}</div>
+        <small class="text-muted">Riwayat Pengujian</small>
+      </div>
+      <div class="kpi-icon">
+        <i class="bi bi-clock-history"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-lg-6">
+    <div class="card-custom h-100">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-pie-chart-fill me-2 text-warning"></i>Distribusi Kelas Topik</h6>
+      </div>
+      <div style="position: relative; height: 280px;">
+        <canvas id="chart-class-dist"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card-custom h-100">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-grid-3x3-gap-fill me-2 text-warning"></i>Confusion Matrix Overview</h6>
+      </div>
+      <div style="position: relative; height: 280px;">
+        <canvas id="chart-cm-overview"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-custom">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="fw-bold mb-0"><i class="bi bi-list-task me-2 text-warning"></i>Riwayat Prediksi Terbaru</h6>
+    <a href="{{ url_for('export_excel') }}" class="btn btn-sm btn-outline-custom">
+      <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-custom mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Teks Dokumen</th>
+          <th>Topik Prediksi</th>
+          <th>Confidence</th>
+          <th>Waktu (s)</th>
+          <th>Tanggal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recent_predictions %}
+          {% for item in recent_predictions %}
+          <tr>
+            <td class="fw-bold">#{{ item.id }}</td>
+            <td style="max-width: 320px;" class="text-truncate">{{ item.text }}</td>
+            <td><span class="badge badge-topic">{{ item.predicted_label }}</span></td>
+            <td>
+              <div class="fw-bold text-success">{{ "%.2f"|format(item.confidence * 100) }}%</div>
+            </td>
+            <td>{{ "%.4f"|format(item.execution_time) }}s</td>
+            <td><small class="text-muted">{{ item.created_at }}</small></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat prediksi. Silakan lakukan pengujian di halaman Testing.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const classData = {{ class_distribution | tojson }};
+  const evalData = {{ eval_metrics | tojson if eval_metrics else 'null' }};
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (Object.keys(classData).length > 0) {
+      const ctxDist = document.getElementById('chart-class-dist').getContext('2d');
+      new Chart(ctxDist, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(classData),
+          datasets: [{
+            data: Object.values(classData),
+            backgroundColor: [
+              '#F59E0B', '#FDBA74', '#FB923C', '#FED7AA',
+              '#D97706', '#B45309', '#78350F'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right' }
+          }
+        }
+      });
+    }
+
+    if (evalData && evalData.confusion_matrix) {
+      const ctxCm = document.getElementById('chart-cm-overview').getContext('2d');
+      new Chart(ctxCm, {
+        type: 'bar',
+        data: {
+          labels: evalData.labels,
+          datasets: [{
+            label: 'Prediksi Benar (Diagonal CM)',
+            data: evalData.labels.map((lbl, idx) => evalData.confusion_matrix[idx][idx]),
+            backgroundColor: '#F59E0B'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

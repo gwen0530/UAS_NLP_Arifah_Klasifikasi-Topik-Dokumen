@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Dataset - Document Topic Classification System{% endblock %}
+{% block breadcrumb %}Dataset{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-3">
+    <div class="card-custom text-center py-3 mb-0">
+      <div class="kpi-label">Jumlah Data</div>
+      <div class="kpi-val text-warning">{{ total_dataset }}</div>
+      <small class="text-muted">Baris Dokumen</small>
+    </div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="card-custom text-center py-3 mb-0">
+      <div class="kpi-label">Jumlah Kelas</div>
+      <div class="kpi-val text-warning">{{ total_categories }}</div>
+      <small class="text-muted">Kategori Unique</small>
+    </div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="card-custom text-center py-3 mb-0">
+      <div class="kpi-label">Rata-rata Panjang</div>
+      <div class="kpi-val text-warning">{{ avg_length }}</div>
+      <small class="text-muted">Karakter / Teks</small>
+    </div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="card-custom text-center py-3 mb-0">
+      <div class="kpi-label">Missing Values</div>
+      <div class="kpi-val text-success">0</div>
+      <small class="text-muted">Data Bersih</small>
+    </div>
+  </div>
+</div>
+
+<div class="card-custom mb-4">
+  <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill me-2 text-warning"></i>Distribusi Label Dataset</h6>
+  <div class="row g-2">
+    {% for cat, count in label_dist.items() %}
+    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+      <div class="p-2 border rounded-xl bg-light text-center">
+        <small class="d-block text-muted font-weight-bold">{{ cat }}</small>
+        <span class="fw-bold text-dark fs-5">{{ count }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card-custom">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+    <h6 class="fw-bold mb-0"><i class="bi bi-table me-2 text-warning"></i>DataTable Dokumen</h6>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-primary-custom" data-bs-toggle="modal" data-bs-target="#uploadModal">
+        <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Upload CSV
+      </button>
+      <button class="btn btn-sm btn-outline-custom" data-bs-toggle="modal" data-bs-target="#addModal">
+        <i class="bi bi-plus-circle-fill me-1"></i> Tambah Data
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-md-6">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" id="search-input" class="form-control border-start-0" placeholder="Cari teks dokumen atau label...">
+      </div>
+    </div>
+    <div class="col-12 col-md-6 text-md-end">
+      <select id="sort-select" class="form-select w-auto d-inline-block">
+        <option value="newest">Terbaru</option>
+        <option value="oldest">Terlama</option>
+        <option value="label">Urutkan Label</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table id="dataset-table" class="table table-custom mb-0">
+      <thead>
+        <tr>
+          <th style="width: 70px;">ID</th>
+          <th>Teks Dokumen</th>
+          <th style="width: 140px;">Kategori</th>
+          <th style="width: 110px;">Panjang</th>
+          <th style="width: 110px;">Kata</th>
+          <th style="width: 80px;" class="text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in dataset %}
+        <tr data-text="{{ item.text | lower }}" data-label="{{ item.label | lower }}" data-id="{{ item.id }}">
+          <td class="fw-bold">#{{ item.id }}</td>
+          <td>{{ item.text }}</td>
+          <td><span class="badge badge-topic">{{ item.label }}</span></td>
+          <td>{{ item.length }} char</td>
+          <td>{{ item.word_count }} kata</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-light border text-danger btn-delete" data-id="{{ item.id }}">
+              <i class="bi bi-trash-fill"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-flex align-items-center justify-content-between mt-3">
+    <small id="page-info" class="text-muted">Menampilkan data...</small>
+    <div class="btn-group btn-group-sm">
+      <button id="btn-prev" class="btn btn-outline-secondary">Prev</button>
+      <button id="btn-next" class="btn btn-outline-secondary">Next</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-xl border-0">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold"><i class="bi bi-upload text-warning me-2"></i>Upload Dataset CSV</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="form-upload" enctype="multipart/form-data">
+        <div class="modal-body">
+          <p class="small text-muted mb-3">Format file CSV harus memiliki kolom header: <code>text</code> dan <code>label</code>.</p>
+          <div class="mb-3">
+            <label for="csvFile" class="form-label font-weight-bold">Pilih File CSV</label>
+            <input type="file" id="csvFile" name="file" class="form-control" accept=".csv" required>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary-custom">Upload File</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-xl border-0">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-warning me-2"></i>Tambah Teks Dokumen Manual</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="form-add">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Teks Dokumen</label>
+            <textarea name="text" class="form-control" rows="4" placeholder="Masukkan isi dokumen..." required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Topik Kategori</label>
+            <select name="label" class="form-select" required>
+              <option value="" selected disabled>Pilih Kategori</option>
+              {% for cat in categories %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary-custom">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentPage = 1;
+  const pageSize = 10;
+  let tableRows = [];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    tableRows = Array.from(document.querySelectorAll('#dataset-table tbody tr'));
+    renderTable();
+
+    document.getElementById('search-input').addEventListener('keyup', function() {
+      currentPage = 1;
+      filterTable();
+    });
+
+    document.getElementById('sort-select').addEventListener('change', function() {
+      sortTable(this.value);
+    });
+
+    document.getElementById('btn-prev').addEventListener('click', function() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+      }
+    });
+
+    document.getElementById('btn-next').addEventListener('click', function() {
+      const visibleRows = getVisibleRows();
+      if (currentPage * pageSize < visibleRows.length) {
+        currentPage++;
+        renderTable();
+      }
+    });
+
+    document.getElementById('form-upload').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      showLoading(true, 'Mengunggah CSV...');
+      fetch('/api/dataset/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        showLoading(false);
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showToast(data.message, 'error');
+        }
+      })
+      .catch(() => {
+        showLoading(false);
+        showToast('Terjadi kesalahan koneksi', 'error');
+      });
+    });
+
+    document.getElementById('form-add').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      showLoading(true, 'Menyimpan data...');
+      fetch('/api/dataset/add', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        showLoading(false);
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showToast(data.message, 'error');
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+          showLoading(true, 'Menghapus data...');
+          fetch(`/api/dataset/delete/${id}`, { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            showLoading(false);
+            if (data.status === 'success') {
+              showToast(data.message, 'success');
+              setTimeout(() => location.reload(), 800);
+            } else {
+              showToast(data.message, 'error');
+            }
+          });
+        }
+      });
+    });
+  });
+
+  function getVisibleRows() {
+    const q = document.getElementById('search-input').value.toLowerCase().trim();
+    return tableRows.filter(row => {
+      const text = row.getAttribute('data-text');
+      const label = row.getAttribute('data-label');
+      return text.includes(q) || label.includes(q);
+    });
+  }
+
+  function filterTable() {
+    renderTable();
+  }
+
+  function sortTable(type) {
+    const tbody = document.querySelector('#dataset-table tbody');
+    if (type === 'newest') {
+      tableRows.sort((a, b) => parseInt(b.getAttribute('data-id')) - parseInt(a.getAttribute('data-id')));
+    } else if (type === 'oldest') {
+      tableRows.sort((a, b) => parseInt(a.getAttribute('data-id')) - parseInt(b.getAttribute('data-id')));
+    } else if (type === 'label') {
+      tableRows.sort((a, b) => a.getAttribute('data-label').localeCompare(b.getAttribute('data-label')));
+    }
+    renderTable();
+  }
+
+  function renderTable() {
+    const visibleRows = getVisibleRows();
+    tableRows.forEach(row => row.style.display = 'none');
+
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = visibleRows.slice(start, end);
+
+    pageItems.forEach(row => row.style.display = '');
+
+    const total = visibleRows.length;
+    const pageInfo = document.getElementById('page-info');
+    if (total === 0) {
+      pageInfo.innerText = 'Tidak ada data ditemukan';
+    } else {
+      pageInfo.innerText = `Menampilkan ${start + 1} - ${Math.min(end, total)} dari ${total} data`;
+    }
+  }
+</script>
+{% endblock %}

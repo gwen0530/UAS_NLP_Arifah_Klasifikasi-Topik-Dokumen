@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Document Topic Classification System{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner-custom mb-3"></div>
+    <h5 id="loading-text" class="fw-bold text-secondary">Memproses...</h5>
+  </div>
+
+  <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;"></div>
+
+  <div id="app-wrapper">
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">
+          <i class="bi bi-diagram-3-fill"></i>
+        </div>
+        <div class="brand-text">
+          Document Topic<br><span style="color: var(--color-primary);">Classifier</span>
+        </div>
+      </div>
+      <ul class="sidebar-menu">
+        <li class="nav-item">
+          <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('dataset_page') }}" class="nav-link {% if request.endpoint == 'dataset_page' %}active{% endif %}">
+            <i class="bi bi-database-fill"></i>
+            <span>Dataset</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('training_page') }}" class="nav-link {% if request.endpoint == 'training_page' %}active{% endif %}">
+            <i class="bi bi-cpu-fill"></i>
+            <span>Training Model</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('testing_page') }}" class="nav-link {% if request.endpoint == 'testing_page' %}active{% endif %}">
+            <i class="bi bi-ui-checks"></i>
+            <span>Testing</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('evaluation_page') }}" class="nav-link {% if request.endpoint == 'evaluation_page' %}active{% endif %}">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <span>Evaluasi</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('visualization_page') }}" class="nav-link {% if request.endpoint == 'visualization_page' %}active{% endif %}">
+            <i class="bi bi-pie-chart-fill"></i>
+            <span>Visualisasi</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('documentation_page') }}" class="nav-link {% if request.endpoint == 'documentation_page' %}active{% endif %}">
+            <i class="bi bi-file-earmark-text-fill"></i>
+            <span>Dokumentasi</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <div id="content-wrapper">
+      <header id="top-header">
+        <div class="d-flex align-items-center gap-3">
+          <button id="btn-toggle-sidebar" class="btn btn-sm btn-light border">
+            <i class="bi bi-list fs-5"></i>
+          </button>
+          <div>
+            <h5 class="fw-bold mb-0">Document Topic Classification System</h5>
+            <small class="text-muted">NLP Machine Learning Classification (Logistic Regression + TF-IDF)</small>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+          <div class="d-none d-md-flex align-items-center gap-2 px-3 py-1 rounded-pill border bg-light">
+            <small class="fw-bold text-muted">Status Model:</small>
+            {% if model_status == 'Tersedia' %}
+              <span class="badge badge-status badge-status-active"><i class="bi bi-check-circle-fill me-1"></i>Tersedia</span>
+            {% else %}
+              <span class="badge badge-status badge-status-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Belum Dilatih</span>
+            {% endif %}
+          </div>
+          <button id="btn-toggle-theme" class="btn btn-sm btn-light border rounded-circle" style="width: 38px; height: 38px;">
+            <i class="bi bi-moon-stars-fill"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}" class="text-decoration-none text-warning fw-semibold">Home</a></li>
+            <li class="breadcrumb-item active fw-semibold" aria-current="page">{% block breadcrumb %}Dashboard{% endblock %}</li>
+          </ol>
+        </nav>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show rounded-xl" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer class="mt-auto py-3 px-4 text-center border-top bg-white">
+        <small class="text-muted">&copy; 2026 Document Topic Classification System. All Rights Reserved.</small>
+      </footer>
+    </div>
+  </div>
+
+  <button id="scroll-top" title="Kembali ke atas">
+    <i class="bi bi-arrow-up-short fs-4"></i>
+  </button>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
